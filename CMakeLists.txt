@@ -56,6 +56,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 if (NVRHI_WITH_VULKAN AND NOT TARGET Vulkan-Headers AND NOT TARGET Vulkan::Headers)
     add_subdirectory(thirdparty/Vulkan-Headers)
+    set(NVRHI_INSTALL_VULKAN_HEADERS ON)
 endif()
 
 if (NVRHI_WITH_RTXMU)
@@ -102,7 +103,7 @@ set(src_common
     src/common/aftermath.cpp)
 
 if(MSVC)
-    set(misc_common 
+    set(misc_common
         tools/nvrhi.natvis)
 else()
     set(misc_common "")
@@ -303,7 +304,7 @@ if (NVRHI_WITH_VULKAN)
         set_target_properties(${nvrhi_vulkan_target} PROPERTIES FOLDER "NVRHI")
         target_include_directories(${nvrhi_vulkan_target} PRIVATE include)
     endif()
-    
+
     if(WIN32)
         target_compile_definitions(${nvrhi_vulkan_target} PUBLIC VK_USE_PLATFORM_WIN32_KHR)
         target_compile_definitions(${nvrhi_vulkan_target} PRIVATE NOMINMAX)
@@ -315,9 +316,9 @@ if (NVRHI_WITH_VULKAN)
     endif()
 
     if (TARGET Vulkan-Headers)
-        target_link_libraries(${nvrhi_vulkan_target} PRIVATE Vulkan-Headers)
+        target_link_libraries(${nvrhi_vulkan_target} PUBLIC Vulkan-Headers)
     elseif (TARGET Vulkan::Headers)
-        target_link_libraries(${nvrhi_vulkan_target} PRIVATE Vulkan::Headers)
+        target_link_libraries(${nvrhi_vulkan_target} PUBLIC Vulkan::Headers)
     endif()
 
     if (NVRHI_WITH_AFTERMATH)
@@ -348,6 +349,10 @@ if (NVRHI_INSTALL)
 
         if (NVRHI_WITH_VULKAN)
             install(TARGETS ${nvrhi_vulkan_target} DESTINATION "lib" EXPORT "nvrhiTargets")
+
+            if (NVRHI_INSTALL_VULKAN_HEADERS)
+                install(TARGETS Vulkan-Headers DESTINATION "lib" EXPORT "nvrhiTargets")
+            endif()
         endif()
     endif()
 
@@ -363,8 +368,8 @@ if (NVRHI_INSTALL)
             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
         write_basic_package_version_file(
-            src/nvrhiConfigVersion.cmake 
-            VERSION ${nvrhi_VERSION} 
+            src/nvrhiConfigVersion.cmake
+            VERSION ${nvrhi_VERSION}
             COMPATIBILITY ExactVersion)
 
         install(FILES
@@ -372,7 +377,7 @@ if (NVRHI_INSTALL)
             "${nvrhi_BINARY_DIR}/src/nvrhiConfigVersion.cmake"
             DESTINATION "${nvrhi_CONFIG_PATH}")
 
-        install(EXPORT "nvrhiTargets" 
+        install(EXPORT "nvrhiTargets"
             FILE "nvrhiTargets.cmake"
             EXPORT_LINK_INTERFACE_LIBRARIES
             DESTINATION "${nvrhi_CONFIG_PATH}")
